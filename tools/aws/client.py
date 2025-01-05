@@ -18,10 +18,18 @@ class S3Client:
                 print(f'The environment variable {var} is not defined')
                 sys.exit(1)
 
-        self.s3 = boto3.client('s3', aws_access_key_id=self._envs['aws_acces_key_id'])
+        self.s3 = boto3.client(
+            's3', 
+            aws_access_key_id=self._envs['aws_acces_key_id'], 
+            aws_secret_access_key=self._envs['aws_secret_access_key'],
+            region_name=self._envs['region_name']
+            )
 
-
-
+    def upload_file(self, data, s3_key):
+        try:
+            self.s3.put_object(Body=data.get_value(), Bucket=self._envs['s3_bucket'], Key=s3_key)
+        except NoCredentialsError:
+            print('Credentials not found. Make sure to set up your AWS credentials correctly.')
 
     def download_file(self, s3_key):
         try:
@@ -29,7 +37,7 @@ class S3Client:
             print(f'Successfull download for {s3_key}')
             return file
         except NoCredentialsError:
-            print('Credentials not found. Make sure to set up your AWS credentials.')
+            print('Credentials not found. Make sure to set up your AWS credentials correctly.')
         except FileNotFoundError:
             print(f'File {s3_key} not found in bucket {self._envs['s3_bucket']}.')
         except Exception as e:
